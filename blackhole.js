@@ -1,63 +1,61 @@
-// Blackhole - A powerful gravitational element that pulls in nearby matter
-elements.blackhole = {
-    color: "#000000",
-    behavior: behaviors.WALL, // Immovable and solid
-    category: "special",
-    state: "solid",
-    density: 99999, // Extremely dense
-    tempHigh: Infinity, // Indestructible by heat
-    tempLow: 0,
-    conduct: 0,
-    hidden: false, // Visible in the element picker
-    tick: function(pixel) {
-        const range = 8; // Attraction radius (can be adjusted)
-        const force = 1; // How strongly pixels are pulled (1 = one pixel per tick)
+// File: custom_elements.js
+// This will create a new category and add the blackhole element
 
-        // Scan all pixels within range
-        for (let y = -range; y <= range; y++) {
-            for (let x = -range; x <= range; x++) {
-                if (x === 0 && y === 0) continue; // Skip self
+(function() {
+    // ===== 1. Create a new category =====
+    if (!elementCategories.custom) {
+        elementCategories.custom = {
+            color: "#FF00FF",  // Bright purple for visibility
+            name: "Cosmic",    // Your custom category name
+            hidden: false     // Make it visible
+        };
+    }
 
-                const nx = pixel.x + x;
-                const ny = pixel.y + y;
-
-                // Skip out-of-bounds pixels
-                if (!isValidPosition(nx, ny)) continue;
-
-                const nearbyPixel = pixelMap[nx][ny];
-                if (!nearbyPixel || nearbyPixel.id === "blackhole") continue;
-
-                // Calculate direction toward the blackhole
-                const dx = Math.sign(pixel.x - nearbyPixel.x);
-                const dy = Math.sign(pixel.y - nearbyPixel.y);
-
-                // Target position (one step closer)
-                const tx = nearbyPixel.x + dx;
-                const ty = nearbyPixel.y + dy;
-
-                // If target is empty, move the pixel
-                if (isEmpty(tx, ty)) {
-                    movePixel(nearbyPixel.x, nearbyPixel.y, tx, ty);
-                }
-                // If blocked, try random adjacent movement (optional)
-                else if (Math.random() < 0.3) {
-                    const randX = nearbyPixel.x + (Math.random() < 0.5 ? -1 : 1);
-                    const randY = nearbyPixel.y + (Math.random() < 0.5 ? -1 : 1);
-                    if (isEmpty(randX, randY)) {
-                        movePixel(nearbyPixel.x, nearbyPixel.y, randX, randY);
+    // ===== 2. Define the Blackhole Element =====
+    elements.blackhole = {
+        color: "#000000",
+        behavior: behaviors.WALL,
+        category: "custom",  // Assign to our new category
+        state: "solid",
+        density: 99999,
+        tempHigh: Infinity,
+        temp: 0,  // Absolute zero for cool effect
+        tick: function(pixel) {
+            const range = 10;
+            for (let y = -range; y <= range; y++) {
+                for (let x = -range; x <= range; x++) {
+                    if (!x && !y) continue;
+                    
+                    const nx = pixel.x + x;
+                    const ny = pixel.y + y;
+                    
+                    if (!isEmpty(nx, ny, true)) {
+                        const target = pixelMap[nx][ny];
+                        if (target.id === "blackhole") continue;
+                        
+                        // Calculate pull direction
+                        const dx = Math.sign(pixel.x - target.x);
+                        const dy = Math.sign(pixel.y - target.y);
+                        
+                        // Try to move target
+                        if (isEmpty(target.x + dx, target.y + dy)) {
+                            movePixel(target.x, target.y, target.x + dx, target.y + dy);
+                        }
                     }
                 }
             }
+        },
+        // Add cool visual effects
+        tickUpdate: function(pixel) {
+            if (Math.random() < 0.02) {
+                createPixel("light", pixel.x + randInt(-1,1), pixel.y + randInt(-1,1));
+            }
         }
-    },
-};
+    };
 
-// Add to the "special" category if not already present
-if (!elementGroups.special.includes("blackhole")) {
-    elementGroups.special.push("blackhole");
-}
+    // ===== 3. Add to UI =====
+    if (!elementGroups.custom) elementGroups.custom = [];
+    elementGroups.custom.push("blackhole");
 
-// Refresh UI (if needed)
-if (typeof renderElementPicker === "function") {
-    renderElementPicker();
-}
+    console.log("Cosmic category and Blackhole loaded!");
+})();
