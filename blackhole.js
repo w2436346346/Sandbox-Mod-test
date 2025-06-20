@@ -1,7 +1,6 @@
-elements.blackhole = {
-	color: "#2b2b2b",
+elements.hello_world = {
+	color: "#ff0000",
 	behavior: behaviors.WALL,
-	category: "special",
+	category: "land",
 	state: "solid",
 }
-
