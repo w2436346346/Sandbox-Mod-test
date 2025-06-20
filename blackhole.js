@@ -1,78 +1,63 @@
-// Register the blackhole element
+// Blackhole - A powerful gravitational element that pulls in nearby matter
 elements.blackhole = {
     color: "#000000",
-    behavior: behaviors.WALL, // solid, stationary
+    behavior: behaviors.WALL, // Immovable and solid
     category: "special",
     state: "solid",
-    density: 1000,
+    density: 99999, // Extremely dense
+    tempHigh: Infinity, // Indestructible by heat
+    tempLow: 0,
+    conduct: 0,
+    hidden: false, // Visible in the element picker
     tick: function(pixel) {
-        const range = 5; // range of attraction
-        for (let dx = -range; dx <= range; dx++) {
-            for (let dy = -range; dy <= range; dy++) {
-                if (dx === 0 && dy === 0) continue; // Skip self
+        const range = 8; // Attraction radius (can be adjusted)
+        const force = 1; // How strongly pixels are pulled (1 = one pixel per tick)
 
-                const nx = pixel.x + dx;
-                const ny = pixel.y + dy;
-                
-                // Check if position is out of bounds
-                if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
-                
+        // Scan all pixels within range
+        for (let y = -range; y <= range; y++) {
+            for (let x = -range; x <= range; x++) {
+                if (x === 0 && y === 0) continue; // Skip self
+
+                const nx = pixel.x + x;
+                const ny = pixel.y + y;
+
+                // Skip out-of-bounds pixels
+                if (!isValidPosition(nx, ny)) continue;
+
                 const nearbyPixel = pixelMap[nx][ny];
                 if (!nearbyPixel || nearbyPixel.id === "blackhole") continue;
 
-                // Calculate vector from nearby pixel to blackhole
-                const vx = pixel.x - nearbyPixel.x;
-                const vy = pixel.y - nearbyPixel.y;
+                // Calculate direction toward the blackhole
+                const dx = Math.sign(pixel.x - nearbyPixel.x);
+                const dy = Math.sign(pixel.y - nearbyPixel.y);
 
-                const dist = Math.sqrt(vx*vx + vy*vy);
-                if (dist === 0) continue;
+                // Target position (one step closer)
+                const tx = nearbyPixel.x + dx;
+                const ty = nearbyPixel.y + dy;
 
-                // Normalize and round movement vector
-                const moveX = Math.round(vx / dist);
-                const moveY = Math.round(vy / dist);
-
-                const targetX = nearbyPixel.x + moveX;
-                const targetY = nearbyPixel.y + moveY;
-
-                // Check if target is within bounds
-                if (targetX < 0 || targetX >= width || targetY < 0 || targetY >= height) {
-                    // Delete pixel if it would be moved out of bounds
-                    deletePixel(nearbyPixel.x, nearbyPixel.y);
-                    continue;
+                // If target is empty, move the pixel
+                if (isEmpty(tx, ty)) {
+                    movePixel(nearbyPixel.x, nearbyPixel.y, tx, ty);
                 }
-
-                // Move pixel one step closer if target is empty
-                if (isEmpty(targetX, targetY)) {
-                    movePixel(nearbyPixel.x, nearbyPixel.y, targetX, targetY);
-                }
-                // Optional: Add some random movement for more dynamic effect
-                else if (Math.random() < 0.1) {
-                    // Try random adjacent spot if direct path is blocked
+                // If blocked, try random adjacent movement (optional)
+                else if (Math.random() < 0.3) {
                     const randX = nearbyPixel.x + (Math.random() < 0.5 ? -1 : 1);
                     const randY = nearbyPixel.y + (Math.random() < 0.5 ? -1 : 1);
-                    if (isEmpty(randX, randY) && randX >= 0 && randX < width && randY >= 0 && randY < height) {
+                    if (isEmpty(randX, randY)) {
                         movePixel(nearbyPixel.x, nearbyPixel.y, randX, randY);
                     }
                 }
             }
         }
-    }
+    },
 };
 
-// Add the element to the special category UI
-if (!elements.blackhole.category) {
-    elements.blackhole.category = "special";
-}
-
-if (!elementGroups.special) {
-    elementGroups.special = [];
-}
-
+// Add to the "special" category if not already present
 if (!elementGroups.special.includes("blackhole")) {
     elementGroups.special.push("blackhole");
 }
 
-// Refresh the element picker UI so the blackhole button shows up
+// Refresh UI (if needed)
 if (typeof renderElementPicker === "function") {
     renderElementPicker();
 }
