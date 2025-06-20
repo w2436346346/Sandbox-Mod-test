@@ -1,7 +1,7 @@
 (function() {
     // ===== 1. Register Cosmic Category =====
-    if (!elementCategories.cosmic) {
-        elementCategories.cosmic = {
+    if (!elements.cosmic) {
+        elements.cosmic = {
             color: "#4b0082",  // Dark purple
             name: "Cosmic",
             hidden: false
@@ -15,6 +15,7 @@
         category: "cosmic",
         density: 99999,
         tempHigh: Infinity,
+        state: "solid",
         temp: 0,
         tick: function(pixel) {
             const range = 8;
@@ -27,7 +28,7 @@
                     const ny = pixel.y + y;
                     
                     // Proper bounds checking
-                    if (!isValidPosition(nx, ny)) continue;
+                    if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
                     
                     const target = pixelMap[nx][ny];
                     if (!target || target.id === "blackhole") continue;
@@ -38,14 +39,14 @@
                     
                     // Try direct movement
                     if (isEmpty(target.x + dx, target.y + dy)) {
-                        movePixel(target.x, target.y, target.x + dx, target.y + dy);
+                        movePixel(target, target.x + dx, target.y + dy);
                     }
                     // Fallback: Random displacement
                     else if (Math.random() < 0.3) {
                         const rx = target.x + (Math.random() < 0.5 ? -1 : 1);
                         const ry = target.y + (Math.random() < 0.5 ? -1 : 1);
                         if (isEmpty(rx, ry)) {
-                            movePixel(target.x, target.y, rx, ry);
+                            movePixel(target, rx, ry);
                         }
                     }
                 }
